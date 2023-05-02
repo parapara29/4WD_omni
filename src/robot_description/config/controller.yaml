@@ -1,0 +1,33 @@
+controller_manager:
+  ros__parameters:
+    joint_state_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 100
+
+    Revolute_34:
+      type: velocity_controllers/JointVelocityController
+      joint: Revolute_34
+      p: 0.04
+      i: 0.01 
+      d: 0.0
+
+    Revolute_42:
+      type: velocity_controllers/JointVelocityController
+      joint: Revolute_42
+      p: 0.04
+      i: 0.01 
+      d: 0.0
+
+    Revolute_43:
+      type: velocity_controllers/JointVelocityController
+      joint: Revolute_43
+      p: 0.04
+      i: 0.01 
+      d: 0.0
+
+    Revolute_44:
+      type: velocity_controllers/JointVelocityController
+      joint: Revolute_44
+      p: 0.04
+      i: 0.01 
+      d: 0.0
