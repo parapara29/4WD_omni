@@ -1,4 +1,5 @@
 % Dynamic model
+clear;
 clc; close all;
 
 % Simulation Parameters
