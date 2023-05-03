@@ -1,4 +1,4 @@
-% Dynamic Model
+% Inverse Kinematics Model
 clc; close all;
 
 % Simulation parameters 
