@@ -1,5 +1,5 @@
 % Dynamic model
-clear;
+clear all;
 clc; close all;
 
 % Simulation Parameters
@@ -15,12 +15,10 @@ eta(:,1) = eta0;
 zeta(:,1) = zeta0;
 
 % Physical parameters
-w = 0.5; % width of the vehicle
-l = 0.5; % length of the vehicle
-a = 0.1; % wheel radius
-b = 0.05; % wheel width
-h = l/4;
-d = w/2; % half of the distance between two wheel centers
+l = 0.4; % length of the vehicle (400mm)
+t_edge = 0.2; % thickness of the edges (200mm)
+a = 0.1; % wheel radius (100mm)
+b = 0.05; % wheel thickness (50mm)
 
 %Vehicle parameters
 m = 60; Iz = 0.5007;
@@ -48,11 +46,12 @@ for i = 1:length(t)
     
     tau(:,i) = D*J_eta'*(eta_des_ddot(:,i)+Kp*(eta_des(:,i)-eta(:,i)) +Kd*(eta_des_dot(:,i)-J_eta*zeta(:,i))) + n_zeta;
     
-    % Wheel configuration matrix
-    gamma = [1,0,1,0; 0,1,0,1; -l/2,-l/2,l/2,l/2];
-    kappa(:,i) = pinv(gamma)*tau(:,i);
+    % Wheel configuration matrix (from previous code)
+    W = [a/2,0,a/2,0; 0,a/2,0,a/2; -(a/(2*l)), -(a/(2*l)),(a/(2*l)),(a/(2*l))];
+    
+    kappa(:,i) = pinv(W)*tau(:,i);
 
-    zeta_dot(:,i) = inv(D)*(gamma*kappa(:,i) - n_zeta - f_zeta);
+    zeta_dot(:,i) = inv(D)*(W*kappa(:,i) - n_zeta - f_zeta);
     zeta(:,i+1) = zeta(:,i) + zeta_dot(:,i)*dt;
     
     eta_dot(:,i) = J_eta*(zeta(:,i)+zeta_dot(:,i)*dt/2);
@@ -60,46 +59,43 @@ for i = 1:length(t)
 end
 
 % Animation
-box_v = [-l/2,l/2,l/2,-l/2,-l/2; -w/2,-w/2,w/2,w/2,-w/2]; % vehicle base
+plus_v = [-t_edge/2, t_edge/2, t_edge/2, l/2, l/2, t_edge/2, t_edge/2,-t_edge/2, -t_edge/2, -l/2,-l/2, -t_edge/2;
+           l/2, l/2, l/2-t_edge/2, l/2-t_edge/2, -(l/2-t_edge/2),-(l/2-t_edge/2), -l/2, -l/2, -(l/2-t_edge/2), -(l/2-t_edge/2),l/2-t_edge/2, l/2-t_edge/2];
 
 box_w = [-a, a, a, -a, -a; -b/2, -b/2, b/2, b/2, -b/2]; % wheels
 
 for i = 1:length(t)
-    
     R_psi = [cos(psi(i)),-sin(psi(i));sin(psi(i)),+cos(psi(i))];
-    % Configuration 1
     R_w1 = [cosd(0),-sind(0);sind(0),+cosd(0)];
     R_w2 = [cosd(90),-sind(90);sind(90),+cosd(90)];
     R_w3 = [cosd(0),-sind(0);sind(0),+cosd(0)];
     R_w4 = [cosd(90),-sind(90);sind(90),+cosd(90)];
+    veh_ani = R_psi * plus_v;
 
-        
-    veh_ani = R_psi * box_v;
-    % Configuration 1
-    wheel_1 = R_psi * (R_w1*box_w+[(l/2)*cosd(0);(l/2)*sind(90)]);
-    wheel_2 = R_psi * (R_w2*box_w+[-(l/2)*cosd(0);(l/2)*sind(90)]);
-    wheel_3 = R_psi * (R_w3*box_w+[-(l/2)*cosd(0);-(l/2)*sind(90)]);
-    wheel_4 = R_psi * (R_w4*box_w+[(l/2)*cosd(0);-(l/2)*sind(90)]);
- 
-    fill(veh_ani(1,:)+x(i),veh_ani(2,:)+y(i),'y');
-    hold on
-    fill(wheel_1(1,:)+x(i),wheel_1(2,:)+y(i),'r');
-    fill(wheel_2(1,:)+x(i),wheel_2(2,:)+y(i),'r');
-    fill(wheel_3(1,:)+x(i),wheel_3(2,:)+y(i),'r');
-    fill(wheel_4(1,:)+x(i),wheel_4(2,:)+y(i),'r');
-    
-    plot(x(1:i),y(1:i),'b--',eta_des(1,1:i),eta_des(2,1:i),'g-');
-    set(gca,'fontsize',24)
-    xlabel('x,[m]');
-    ylabel('y,[m]');
-    llim = min(min(x),min(y)) - l;
-    ulim = max(max(x),max(y)) + l;
-    axis([llim ulim llim ulim]);
-    axis square
-    grid on
-    pause(0.1)
-    hold off
+    % Wheel positions and orientations
+    wheel_1 = R_psi * (R_w1*box_w + [-t_edge/2+a; l/2+b/2]);
+    wheel_2 = R_psi * (R_w2*box_w + [l/2+b/2; t_edge/2-a]);
+    wheel_3 = R_psi * (R_w3*box_w + [t_edge/2-a; -l/2-b/2]);
+    wheel_4 = R_psi * (R_w4*box_w + [-l/2-b/2; -t_edge/2+a]);
 
+fill(veh_ani(1,:)+x(i),veh_ani(2,:)+y(i),'y');
+hold on
+fill(wheel_1(1,:)+x(i),wheel_1(2,:)+y(i),'r');
+fill(wheel_2(1,:)+x(i),wheel_2(2,:)+y(i),'r');
+fill(wheel_3(1,:)+x(i),wheel_3(2,:)+y(i),'r');
+fill(wheel_4(1,:)+x(i),wheel_4(2,:)+y(i),'r');
+
+plot(x(1:i),y(1:i),'b--',eta_des(1,1:i),eta_des(2,1:i),'g-');
+set(gca,'fontsize',24)
+xlabel('x,[m]');
+ylabel('y,[m]');
+llim = min(min(x),min(y)) - l;
+ulim = max(max(x),max(y)) + l;
+axis([llim ulim llim ulim]);
+axis square
+grid on
+pause(0.1)
+hold off
 end
 
 % Plots
@@ -116,4 +112,5 @@ grid on
 legend('x,[m]','y,[m]','\psi,[rad]');
 xlabel('t[s]');
 ylabel('eta[units]');
+
 
